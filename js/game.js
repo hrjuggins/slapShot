@@ -14,6 +14,7 @@ gameScene.preload = function() {
     this.load.image('goal', 'assets/goal.png');    
     this.load.image('puck', 'assets/puck.png');
     this.load.audio('buzzer', [
+        'assets/buzzer.ogg',
         'assets/buzzer.mp3',
     ]);
     this.load.audio('slapshot', [
@@ -133,6 +134,7 @@ function defence() {
 
 function loss() {
     score = 0;
+    activePuck = false;
     gameScene.scene.restart()
     return;
 }
