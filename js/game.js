@@ -16,11 +16,11 @@ gameScene.preload = function() {
     this.load.audio('buzzer', [
         'assets/buzzer.ogg',
         'assets/buzzer.mp3',
-    ]);
+    ], {instances: 10});
     this.load.audio('slapshot', [
         'assets/slapshot.ogg',
         'assets/slapshot.mp3',
-    ]);
+    ], {instances: 10});
 }
 
 // called after the preload ends
@@ -51,9 +51,11 @@ gameScene.create = function() {
     this.input.on('pointerup', shoot, this);
 
     this.time.addEvent({delay: 3000, loop: true, callback: defence, callbackScope: this});
-    
 
     scoreText = this.add.text(50, 50, score, { fontSize: 42, color: 'black' });
+
+    this.sound.add('buzzer');
+    this.sound.add('slapshot');
 
 }
 
