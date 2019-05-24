@@ -65,8 +65,8 @@ function shoot(pointer) {
             puck.setCollideWorldBounds(true);
             let angle = Phaser.Math.DegToRad(getAngle(original, current) - 180);
             gameScene.physics.velocityFromRotation(angle, 150, puck.body.velocity);
-            puck.body.velocity.x *= 2;
-            puck.body.velocity.y *= 2;
+            puck.body.velocity.x *= 4;
+            puck.body.velocity.y *= 4;
         } 
     }
     
