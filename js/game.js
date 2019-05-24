@@ -153,6 +153,7 @@ gameScene.update = function() {
             goalScored(pucks[i])
         }
         if (puckRect.bottom == 10) {
+            activePuck = false;
             pucks[i].destroy();
         }
     }
