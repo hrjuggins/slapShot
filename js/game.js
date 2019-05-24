@@ -13,8 +13,13 @@ gameScene.preload = function() {
     this.load.image('defender', 'assets/defender.png');
     this.load.image('goal', 'assets/goal.png');    
     this.load.image('puck', 'assets/puck.png');
-    this.load.audio('buzzer', 'assets/buzzer.mp3');
-    this.load.audio('slapshot', 'assets/slapshot.mp3');
+    this.load.audio('buzzer', [
+        'assets/buzzer.mp3',
+    ]);
+    this.load.audio('slapshot', [
+        'assets/slapshot.ogg',
+        'assets/slapshot.mp3',
+    ]);
 }
 
 // called after the preload ends
