@@ -1,0 +1,37 @@
+Game Design Document
+
+Game concept
+
+Vertical scroller ico hockey platform game. 
+Control an ice hocker player and shoot pucks into nets as they come along
+Avoid defenders too 
+
+Target Platforms
+
+Cross platform
+Browser game
+
+UI/ Player controls
+
+Click and move
+Touch and move
+
+Game mechanics
+
+Game constantly moves upwards
+Nets will appear from the top of the screen
+Defenders will also appear and move towards the player
+User clicks and drags the player left and right
+To shoot the puck they release the player
+If they get hit by a defender they lose
+
+Assets
+
+Pixel art style
+Sprites:
+Background
+Player
+Defenders
+Puck 
+Goal
+
