@@ -193,11 +193,11 @@ gameScene.update = function() {
         setCurrentPoint()
         // console.log(getAngle(original, current))
         if (current.x > this.sys.game.config.width/2 && playerRect.left > 0 ) {
-            this.player.x -= this.playerSpeed;
+            this.player.x += this.playerSpeed;
             this.player.flipX = false;
             // this.player.rotation += 0.05;
         } else if (current.x < this.sys.game.config.width/2 && playerRect.right < this.sys.game.config.width) {
-            this.player.x += this.playerSpeed;
+            this.player.x -= this.playerSpeed;
             this.player.flipX = true;
             // this.player.rotation -= 0.05;
         }
