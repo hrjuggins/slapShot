@@ -13,8 +13,14 @@ gameScene.preload = function() {
     this.load.image('defender', 'assets/defender.png');
     this.load.image('goal', 'assets/goal.png');    
     this.load.image('puck', 'assets/puck.png');
-    this.load.audio('buzzer', 'assets/buzzer.mp3');
-    this.load.audio('slapshot', 'assets/slapshot.mp3');
+    this.load.audio('buzzer', [
+        'assets/buzzer.ogg',
+        'assets/buzzer.mp3',
+    ], {instances: 10});
+    this.load.audio('slapshot', [
+        'assets/slapshot.ogg',
+        'assets/slapshot.mp3',
+    ], {instances: 10});
 }
 
 // called after the preload ends
@@ -45,7 +51,6 @@ gameScene.create = function() {
     this.input.on('pointerup', shoot, this);
 
     this.time.addEvent({delay: 3000, loop: true, callback: defence, callbackScope: this});
-    
 
     scoreText = this.add.text(50, 50, score, { fontSize: 42, color: 'black' });
 
@@ -73,8 +78,8 @@ function shoot(pointer) {
             console.log(angle);
             
             gameScene.physics.velocityFromRotation(angle, 150, puck.body.velocity);
-            puck.body.velocity.x *= 2;
-            puck.body.velocity.y *= 2;
+            puck.body.velocity.x *= 4;
+            puck.body.velocity.y *= 4;
         } 
     }
     
@@ -140,6 +145,7 @@ function defence() {
 
 function loss() {
     score = 0;
+    activePuck = false;
     gameScene.scene.restart()
     return;
 }
@@ -178,6 +184,7 @@ gameScene.update = function() {
             goalScored(pucks[i])
         }
         if (puckRect.bottom == 10) {
+            activePuck = false;
             pucks[i].destroy();
             activePuck = false;
         }
@@ -217,10 +224,10 @@ gameScene.update = function() {
         // }
         // inverted
         if (current.x > this.sys.game.config.width/2 && playerRect.left > 0 ) {
-            this.player.x -= this.playerSpeed;
+            this.player.x += this.playerSpeed;
             this.player.flipX = false;
         } else if (current.x < this.sys.game.config.width/2 && playerRect.right < this.sys.game.config.width) {
-            this.player.x += this.playerSpeed;
+            this.player.x -= this.playerSpeed;
             this.player.flipX = true;
         }
     }
