@@ -49,12 +49,18 @@ gameScene.create = function() {
 
     scoreText = this.add.text(50, 50, score, { fontSize: 42, color: 'black' });
 
+    this.graphics = this.add.graphics();
+
 }
 
 function shoot(pointer) {
     if (!activePuck) {
         gameScene.sound.play('slapshot');
         let puck = this.pucks.get(this.player.x, this.player.y);
+        let puckPos = {
+            x: this.player.x,
+            y: this.player.y
+        }
         pucksShot ++;
         activePuck = true;
         console.log(pucksShot);
@@ -63,7 +69,9 @@ function shoot(pointer) {
             puck.setVisible(true);
             puck.setBounce(0.7);
             puck.setCollideWorldBounds(true);
-            let angle = Phaser.Math.DegToRad(getAngle(original, current) - 180);
+            let angle = Phaser.Math.DegToRad(getAngle(puckPos, current) - 180);
+            console.log(angle);
+            
             gameScene.physics.velocityFromRotation(angle, 150, puck.body.velocity);
             puck.body.velocity.x *= 2;
             puck.body.velocity.y *= 2;
@@ -86,9 +94,13 @@ let pucksShot = 0;
 let activePuck = false;
 
 function setOriginalPoint() {
+
+    let x = game.input.activePointer.x
+    let y = game.input.activePointer.y
+
     original = {
-        x: game.input.activePointer.x,
-        y: game.input.activePointer.y,
+        x: x,
+        y: y
     }
 }
 
@@ -136,6 +148,19 @@ function loss() {
 
 gameScene.update = function() {
 
+    // if (original) {
+    //     // gameScene.graphics.fillRect(original.x, original.y, game.input.activePointer.x, game.input.activePointer.y);
+        
+    //     this.graphics.clear();
+    //     let newLine = new Phaser.Geom.Line(this.player.x, this.player.y, game.input.activePointer.x, game.input.activePointer.y);
+
+    //     this.graphics.lineStyle(2, 0x00aa00);
+
+    //     this.graphics.strokeLineShape(newLine);
+
+    //     this.graphics.fillStyle(0xff0000);
+    // }
+
     // background and goal scrolling
     this.bg.tilePositionY -= 2
     this.goal.y += 2;
@@ -154,6 +179,7 @@ gameScene.update = function() {
         }
         if (puckRect.bottom == 10) {
             pucks[i].destroy();
+            activePuck = false;
         }
     }
     let defenders = this.defenders.getChildren()
@@ -181,15 +207,21 @@ gameScene.update = function() {
     // player movement
     if (this.input.activePointer.isDown) {
         setCurrentPoint()
-        // console.log(getAngle(original, current))
+        // regular
+        // if (current.x > this.sys.game.config.width/2 && playerRect.right < this.sys.game.config.width ) {
+        //     this.player.x += this.playerSpeed;
+        //     this.player.flipX = false;
+        // } else if (current.x < this.sys.game.config.width/2 && playerRect.left > 0) {
+        //     this.player.x -= this.playerSpeed;
+        //     this.player.flipX = true;
+        // }
+        // inverted
         if (current.x > this.sys.game.config.width/2 && playerRect.left > 0 ) {
             this.player.x -= this.playerSpeed;
             this.player.flipX = false;
-            // this.player.rotation += 0.05;
         } else if (current.x < this.sys.game.config.width/2 && playerRect.right < this.sys.game.config.width) {
             this.player.x += this.playerSpeed;
             this.player.flipX = true;
-            // this.player.rotation -= 0.05;
         }
     }
 }
@@ -208,7 +240,7 @@ let config = {
     physics: {
         default: 'arcade',
         arcade: {
-            debug: true
+            // debug: true
         }
     },
     audio: {
