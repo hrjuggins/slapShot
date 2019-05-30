@@ -55,7 +55,7 @@ gameScene.create = function() {
     this.input.on('pointerdown', setOriginalPoint);
     this.input.on('pointerup', shoot, this);
 
-    this.time.addEvent({delay: 3000, loop: true, callback: defence, callbackScope: this});
+    this.time.addEvent({delay: 3000, loop: false, callback: defence, callbackScope: this});
 
     scoreText = this.add.text(50, 50, score, { fontSize: 42, color: 'black' });
 
@@ -141,14 +141,17 @@ function updateText() {
 
 function defence() {
     setPlayerPos();
-    let defender = this.defenders.get(Math.random() * this.sys.game.config.width, 0);
+    let defender = gameScene.defenders.get(Math.random() * gameScene.sys.game.config.width, 0);
     if (defender) {
         defender.setActive(true);
         defender.setVisible(true);
         defender.setScale(0.5)
     }
-    if (this.defendersGroup.length > 1) {
-        this.defendersGroup[0].destroy();
+    if (gameScene.defendersGroup[0].y >= 640) {
+        defence();
+    }
+    if (gameScene.defendersGroup.length > 1) {
+        gameScene.defendersGroup[0].destroy();
     }
 }
 
@@ -171,6 +174,9 @@ function setPlayerPos() {
 gameScene.update = function() {
     
     if (this.defendersGroup.length >= 1) {
+        if (this.defendersGroup[0].y >= 640) {
+            this.defendersGroup[0].y = 0;
+        }
         this.physics.moveTo(this.defendersGroup[0], playerPos.x, 700, this.defenderSpeed);
     }
 
@@ -181,12 +187,12 @@ gameScene.update = function() {
         this.playerSpeed = 1;
         this.defenderSpeed = 2 * 30;
     } else {
-        this.bg.tilePositionY -= 2;
-        this.goal.y += 2;
+        this.bg.tilePositionY -= 3;
+        this.goal.y += 3;
         this.playerSpeed = 6;
         this.defenderSpeed = 8 * 30;
     }
-    if (this.goal.y >= 640) {
+    if (this.goal.y >= this.sys.game.config.height) {
         this.goal.y = 0;
     }
     
@@ -240,6 +246,8 @@ gameScene.update = function() {
         if (current.x < this.player.x - 20 && playerRect.left > 0) {
             this.player.x -= this.playerSpeed;
             this.player.flipX = false;
+
+            console.log(this.player);
         // right
         } else if (current.x > this.player.x + 20 && playerRect.right < this.sys.game.config.width ) {
             this.player.x += this.playerSpeed;
