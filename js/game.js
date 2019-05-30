@@ -3,7 +3,8 @@ let gameScene = new Phaser.Scene('Game');
 
 // initiate scene parameters
 gameScene.init = function() {
-    this.playerSpeed = 6;
+    this.playerSpeed = 8;
+    this.defenderSpeed = 8;
 }
 
 // load assets
@@ -21,6 +22,7 @@ gameScene.preload = function() {
         'assets/slapshot.ogg',
         'assets/slapshot.mp3',
     ], {instances: 10});
+
 }
 
 // called after the preload ends
@@ -30,7 +32,8 @@ gameScene.create = function() {
     this.bg.setOrigin(0,0);
 
     this.player = this.physics.add.sprite(this.sys.game.config.width/2, 400, 'player');
-    this.player.setScale(0.5)
+    // this.player.setOrigin()
+    this.player.setScale(0.4)
 
     
     // this.defender = this.physics.add.sprite(Math.random() * this.sys.game.config.width, 0, 'defender');
@@ -40,6 +43,8 @@ gameScene.create = function() {
     this.defenders = this.physics.add.group({
         defaultKey: 'defender'
     });
+
+    this.defendersGroup = this.defenders.getChildren();
 
     this.goal = this.add.sprite(this.sys.game.config.width/2, 40, 'goal');
 
@@ -55,12 +60,22 @@ gameScene.create = function() {
     scoreText = this.add.text(50, 50, score, { fontSize: 42, color: 'black' });
 
     this.graphics = this.add.graphics();
+    this.graphics.fillStyle(0xf7f7f7);
+    this.graphics.fillRect(0, 550, 360, 640);
+    // this.graphics.lineStyle(20, 0x2ECC40);
+    this.graphics.strokeRect(0, 550, 360, 80);
+    this.time.addEvent({delay: 3000, loop: true, callback: flashSlowMo, callbackScope: this});
+    this.text = this.add.text(this.sys.game.config.width/2 - 60, 575, 'Slo-mo zone', { fontFamily: 'Arial', fontSize: 24, color: '#000000' });
 
+    
 }
 
-function shoot(pointer) {
+function flashSlowMo() {
+    gameScene.graphics.clear();
+    this.text.setColor('#00000000');
+}
+function shoot(pointer) {  
     if (!activePuck) {
-        gameScene.sound.play('slapshot');
         let puck = this.pucks.get(this.player.x, this.player.y);
         let puckPos = {
             x: this.player.x,
@@ -68,21 +83,18 @@ function shoot(pointer) {
         }
         pucksShot ++;
         activePuck = true;
-        console.log(pucksShot);
+        gameScene.sound.play('slapshot');
         if (puck) {
             puck.setActive(true);
             puck.setVisible(true);
             puck.setBounce(0.7);
             puck.setCollideWorldBounds(true);
             let angle = Phaser.Math.DegToRad(getAngle(puckPos, current) - 180);
-            console.log(angle);
-            
             gameScene.physics.velocityFromRotation(angle, 150, puck.body.velocity);
             puck.body.velocity.x *= 4;
             puck.body.velocity.y *= 4;
         } 
     }
-    
 }
 
 function goalScored(puck) {
@@ -92,11 +104,12 @@ function goalScored(puck) {
     updateText();
 }
 
-let original
-let current
+let original;
+let current;
 let score = 0;
 let pucksShot = 0;
 let activePuck = false;
+let playerPos;
 
 function setOriginalPoint() {
 
@@ -127,19 +140,15 @@ function updateText() {
 }
 
 function defence() {
+    setPlayerPos();
     let defender = this.defenders.get(Math.random() * this.sys.game.config.width, 0);
     if (defender) {
-    defender.setActive(true);
-    defender.setVisible(true);
-    defender.setScale(0.6)
-    this.physics.moveTo(defender, this.player.x, this.player.y, 200);
-    
-        // puck.setBounce(0.7);
-        // puck.setCollideWorldBounds(true);
-        // let angle = Phaser.Math.DegToRad(getAngle(original, current) - 180);
-        // gameScene.physics.velocityFromRotation(angle, 150, puck.body.velocity);
-        // puck.body.velocity.x *= 2;
-        // puck.body.velocity.y *= 2;
+        defender.setActive(true);
+        defender.setVisible(true);
+        defender.setScale(0.5)
+    }
+    if (this.defendersGroup.length > 1) {
+        this.defendersGroup[0].destroy();
     }
 }
 
@@ -150,29 +159,37 @@ function loss() {
     return;
 }
 
+function setPlayerPos() {
+    playerPos = {
+        x: gameScene.player.x,
+        y: gameScene.player.y
+    }
+}
+
 // update function called 60 times a sec
 
 gameScene.update = function() {
-
-    // if (original) {
-    //     // gameScene.graphics.fillRect(original.x, original.y, game.input.activePointer.x, game.input.activePointer.y);
-        
-    //     this.graphics.clear();
-    //     let newLine = new Phaser.Geom.Line(this.player.x, this.player.y, game.input.activePointer.x, game.input.activePointer.y);
-
-    //     this.graphics.lineStyle(2, 0x00aa00);
-
-    //     this.graphics.strokeLineShape(newLine);
-
-    //     this.graphics.fillStyle(0xff0000);
-    // }
+    
+    if (this.defendersGroup.length >= 1) {
+        this.physics.moveTo(this.defendersGroup[0], playerPos.x, 700, this.defenderSpeed);
+    }
 
     // background and goal scrolling
-    this.bg.tilePositionY -= 2
-    this.goal.y += 2;
-    if (this.goal.y == 640) {
+    if (this.input.activePointer.isDown && this.input.activePointer.y > this.player.y + 150) {
+        this.bg.tilePositionY -= 0.5;
+        this.goal.y += 0.5;
+        this.playerSpeed = 1;
+        this.defenderSpeed = 2 * 30;
+    } else {
+        this.bg.tilePositionY -= 2;
+        this.goal.y += 2;
+        this.playerSpeed = 6;
+        this.defenderSpeed = 8 * 30;
+    }
+    if (this.goal.y >= 640) {
         this.goal.y = 0;
     }
+    
 
     // collisions
     let playerRect = this.player.getBounds();
@@ -184,6 +201,10 @@ gameScene.update = function() {
             goalScored(pucks[i])
         }
         if (puckRect.bottom == 10) {
+            activePuck = false;
+            pucks[i].destroy();
+            activePuck = false;
+        } else  if (puckRect.bottom >= 640) {
             activePuck = false;
             pucks[i].destroy();
             activePuck = false;
@@ -211,25 +232,29 @@ gameScene.update = function() {
         loss();
     }
     
+    
     // player movement
     if (this.input.activePointer.isDown) {
-        setCurrentPoint()
-        // regular
-        // if (current.x > this.sys.game.config.width/2 && playerRect.right < this.sys.game.config.width ) {
-        //     this.player.x += this.playerSpeed;
-        //     this.player.flipX = false;
-        // } else if (current.x < this.sys.game.config.width/2 && playerRect.left > 0) {
-        //     this.player.x -= this.playerSpeed;
-        //     this.player.flipX = true;
-        // }
-        // inverted
-        if (current.x > this.sys.game.config.width/2 && playerRect.left > 0 ) {
-            this.player.x += this.playerSpeed;
-            this.player.flipX = false;
-        } else if (current.x < this.sys.game.config.width/2 && playerRect.right < this.sys.game.config.width) {
+        setCurrentPoint();
+        // left
+        if (current.x < this.player.x - 20 && playerRect.left > 0) {
             this.player.x -= this.playerSpeed;
+            this.player.flipX = false;
+        // right
+        } else if (current.x > this.player.x + 20 && playerRect.right < this.sys.game.config.width ) {
+            this.player.x += this.playerSpeed;
             this.player.flipX = true;
+        
         }
+        // inverted
+        // right
+        // if (current.x < this.player.x - 20 && playerRect.right < this.sys.game.config.width) {
+        //     this.player.x += this.playerSpeed;
+        // // left
+        // } else if (current.x > this.player.x + 20 && playerRect.left > 0) {
+        //     this.player.x -= this.playerSpeed;
+        
+        // }
     }
 }
 
