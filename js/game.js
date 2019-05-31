@@ -4,7 +4,7 @@ let gameScene = new Phaser.Scene('Game');
 // initiate scene parameters
 gameScene.init = function() {
     this.playerSpeed = 8;
-    this.defenderSpeed = 8;
+    this.defenderSpeed = 10 * 30;
 }
 
 // load assets
@@ -14,6 +14,8 @@ gameScene.preload = function() {
     this.load.image('defender', 'assets/defender.png');
     this.load.image('goal', 'assets/goal.png');    
     this.load.image('puck', 'assets/puck.png');
+    this.load.image('question', 'assets/question.png');
+    this.load.image('slomoactivated', 'assets/slomoactivated.png');
     this.load.audio('buzzer', [
         'assets/buzzer.ogg',
         'assets/buzzer.mp3',
@@ -60,20 +62,66 @@ gameScene.create = function() {
     scoreText = this.add.text(50, 50, score, { fontSize: 42, color: 'black' });
 
     this.graphics = this.add.graphics();
-    this.graphics.fillStyle(0xf7f7f7);
-    this.graphics.fillRect(0, 550, 360, 640);
-    // this.graphics.lineStyle(20, 0x2ECC40);
-    this.graphics.strokeRect(0, 550, 360, 80);
-    this.time.addEvent({delay: 3000, loop: true, callback: flashSlowMo, callbackScope: this});
-    this.text = this.add.text(this.sys.game.config.width/2 - 60, 575, 'Slo-mo zone', { fontFamily: 'Arial', fontSize: 24, color: '#000000' });
 
-    
+    this.questions = this.physics.add.group({
+        defaultKey: 'question'
+    });
+    this.questionsGroup = this.questions.getChildren();
+
+    if (!questionActive) {
+        this.time.addEvent({delay: 10000, loop: true, callback: showQuestion, callbackScope: this});
+    }
+
+    this.slomotext = this.add.sprite(gameScene.sys.game.config.width/2, 50, 'slomoactivated');
+    this.slomotext.setVisible(false);
 }
+
+
+let original;
+let current;
+let score = 0;
+let pucksShot = 0;
+let activePuck = false;
+let playerPos;
+let questionActive = true;
+let powerUpActive = false;
+let powerUpStart;
+
+function showQuestion() {
+    let question = gameScene.questions.get(Math.random() * gameScene.sys.game.config.width, Math.random() * gameScene.sys.game.config.height / 2);
+    if (question) {
+        question.setActive(true);
+        question.setVisible(true);
+    }
+    if (gameScene.questionsGroup.length > 1) {
+        gameScene.questionsGroup[0].destroy();
+        questionActive = false;
+    }
+}
+
+function powerUpAction() {
+    questionActive = false;
+    powerUpStart = gameScene.time.now;
+    let roll = Math.floor(Math.random() * 4);
+    if (roll == 1) {
+        flashSlowMo()
+    }
+}
+
+
 
 function flashSlowMo() {
-    gameScene.graphics.clear();
-    this.text.setColor('#00000000');
+    gameScene.slomotext.setVisible(true);
+    gameScene.graphics.fillStyle(0xf7f7f7);
+    gameScene.graphics.fillRect(0, 550, 360, 640);
+    // this.graphics.lineStyle(20, 0x2ECC40);
+    gameScene.graphics.strokeRect(0, 550, 360, 80);
+    gameScene.time.addEvent({delay: 3000, loop: true, callback: function() {
+        gameScene.graphics.clear();
+        gameScene.slomotext.setVisible(false);
+    }, callbackScope: this});
 }
+
 function shoot(pointer) {  
     if (!activePuck) {
         let puck = this.pucks.get(this.player.x, this.player.y);
@@ -103,13 +151,6 @@ function goalScored(puck) {
     puck.destroy();
     updateText();
 }
-
-let original;
-let current;
-let score = 0;
-let pucksShot = 0;
-let activePuck = false;
-let playerPos;
 
 function setOriginalPoint() {
 
@@ -147,9 +188,6 @@ function defence() {
         defender.setVisible(true);
         defender.setScale(0.5)
     }
-    if (gameScene.defendersGroup[0].y >= 640) {
-        defence();
-    }
     if (gameScene.defendersGroup.length > 1) {
         gameScene.defendersGroup[0].destroy();
     }
@@ -172,68 +210,100 @@ function setPlayerPos() {
 // update function called 60 times a sec
 
 gameScene.update = function() {
-    
+
+    // power up code
+    let powerRect
+    if (this.questionsGroup.length >= 1) {
+        powerRect = this.questionsGroup[0].getBounds();
+        this.questionsGroup[0].y += 3
+    }
+    if (this.time.now - powerUpStart > 10000) {
+        questionActive = true;
+    }
+
+    // defender code //
+    // save defender bounds 
+    let defRect
+    // only this code if there is a defender
     if (this.defendersGroup.length >= 1) {
+        // save defender bounds 
+        defRect = this.defendersGroup[0].getBounds();
+        // reset pos at bottom of screen
         if (this.defendersGroup[0].y >= 640) {
-            this.defendersGroup[0].y = 0;
+            defence();
         }
+        // direction of defender towards player position
         this.physics.moveTo(this.defendersGroup[0], playerPos.x, 700, this.defenderSpeed);
     }
 
-    // background and goal scrolling
-    if (this.input.activePointer.isDown && this.input.activePointer.y > this.player.y + 150) {
-        this.bg.tilePositionY -= 0.5;
-        this.goal.y += 0.5;
-        this.playerSpeed = 1;
-        this.defenderSpeed = 2 * 30;
-    } else {
-        this.bg.tilePositionY -= 3;
-        this.goal.y += 3;
-        this.playerSpeed = 6;
-        this.defenderSpeed = 8 * 30;
-    }
-    if (this.goal.y >= this.sys.game.config.height) {
+    // continuous scrolling and slow mo
+    // if (this.input.activePointer.isDown && this.input.activePointer.y > this.player.y + 150) {
+    //     this.bg.tilePositionY -= 0.5;
+    //     this.goal.y += 0.5;
+    //     this.playerSpeed = 1;
+    //     this.defenderSpeed = 2 * 30;
+    // } else {
+    this.bg.tilePositionY -= 3;
+    this.goal.y += 3;
+    // this.playerSpeed = 8;
+    // this.defenderSpeed = 10 * 30;
+    // }
+    if (this.goal.y >= 640) {
         this.goal.y = 0;
     }
+    
     
 
     // collisions
     let playerRect = this.player.getBounds();
     let goalRect = this.goal.getBounds();
     let pucks = this.pucks.getChildren()
+
     for (let i = 0; i < pucks.length; i++) {
         let puckRect = pucks[i].getBounds();
+        // puck and goal collision
         if (Phaser.Geom.Intersects.RectangleToRectangle(puckRect, goalRect)) {
             goalScored(pucks[i])
-        }
+        // puck and defender collision
+        } else if (defRect && Phaser.Geom.Intersects.RectangleToRectangle(puckRect, defRect)) {
+            pucks[i].destroy();
+            activePuck = false;
+        } 
+        // puck top of screen reset
         if (puckRect.bottom == 10) {
             activePuck = false;
             pucks[i].destroy();
-            activePuck = false;
+            // puck bottom of screen reset
         } else  if (puckRect.bottom >= 640) {
             activePuck = false;
             pucks[i].destroy();
-            activePuck = false;
         }
     }
     let defenders = this.defenders.getChildren()
     for (let i = 0; i < defenders.length; i++) {
         let defRect = defenders[i].getBounds();
+        // defender and player collision
         if (Phaser.Geom.Intersects.RectangleToRectangle(playerRect, defRect)) {
             loss();
-        }
+        } 
+    } 
+    // player and power up collision
+    if (powerRect && Phaser.Geom.Intersects.RectangleToRectangle(playerRect, powerRect)) {
+        powerUpAction();
     }
+    
+    // player and power up collision
     if (Phaser.Geom.Intersects.RectangleToRectangle(playerRect, goalRect)) {
         this.player.y +=2;
     }
     if (!Phaser.Geom.Intersects.RectangleToRectangle(playerRect, goalRect) && this.player.y > 400) {
-        // this.physics.moveTo(this.player, 400, 5);
         if (this.player.y == 400) {
             this.player.y = 400
         } else {
             this.player.y -= 2;
         }
     }
+    // player bottom of screen collision
     if (this.player.y > 590) {
         loss();
     }
@@ -243,13 +313,11 @@ gameScene.update = function() {
     if (this.input.activePointer.isDown) {
         setCurrentPoint();
         // left
-        if (current.x < this.player.x - 20 && playerRect.left > 0) {
+        if (current.x < this.player.x - 20 && playerRect.left > 30) {
             this.player.x -= this.playerSpeed;
             this.player.flipX = false;
-
-            console.log(this.player);
         // right
-        } else if (current.x > this.player.x + 20 && playerRect.right < this.sys.game.config.width ) {
+        } else if (current.x > this.player.x + 20 && playerRect.right < this.sys.game.config.width - 30) {
             this.player.x += this.playerSpeed;
             this.player.flipX = true;
         
