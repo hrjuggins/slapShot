@@ -22,3 +22,4 @@ scoreScene.create = function() {
     }, this);
 
 }
+scoreScene.update = function() {}

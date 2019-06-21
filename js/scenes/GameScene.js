@@ -8,7 +8,7 @@ gameScene.init = function() {
 
 // load assets
 gameScene.preload = function() {
-    this.load.image('background', 'assets/background.jpg');
+    this.load.image('background', 'assets/background.png');
     this.load.image('player', 'assets/player.png');
     this.load.image('defender', 'assets/defender.png');
     this.load.image('goal', 'assets/goal.png');    
@@ -47,7 +47,7 @@ gameScene.create = function() {
 
     this.defendersGroup = this.defenders.getChildren();
 
-    this.goal = this.add.sprite(this.sys.game.config.width/2, 40, 'goal');
+    this.goal = this.physics.add.sprite(this.sys.game.config.width/2, 50, 'goal');
 
     this.pucks = this.physics.add.group({
         defaultKey: 'puck'
@@ -79,11 +79,15 @@ gameScene.create = function() {
 
     this.slomotext = this.add.sprite(gameScene.sys.game.config.width/2, 50, 'slomoactivated');
     this.slomotext.setVisible(false);
+
 }
 
 
 let original;
-let current;
+let current = {
+    x: 160,
+    y: 400
+}
 let score = 0;
 let pucksShot = 0;
 let activePuck = false;
@@ -144,7 +148,7 @@ function shoot(pointer) {
             puck.setVisible(true);
             puck.setBounce(0.7);
             puck.setCollideWorldBounds(true);
-            let angle = Phaser.Math.DegToRad(getAngle(puckPos, current) - 180);
+            angle = Phaser.Math.DegToRad(getAngle(puckPos, current) - 180);
             gameScene.physics.velocityFromRotation(angle, 150, puck.body.velocity);
             puck.body.velocity.x *= 4;
             puck.body.velocity.y *= 4;
@@ -205,6 +209,8 @@ function loss() {
     activePuck = false;
     // gameScene.scene.pause()
     gameScene.scene.launch(scoreScene);
+    // gameScene.scene.add('scoreScene', scoreScene, true, { x: 400, y: 300 });
+
     // gameScene.scene.restart()
     return;
 }
@@ -218,7 +224,6 @@ function setPlayerPos() {
 
 // update function called 60 times a sec
 gameScene.update = function() {
-
     // power up code
     let powerRect
     if (this.questionsGroup.length >= 1) {
@@ -264,7 +269,7 @@ gameScene.update = function() {
     // this.playerSpeed = 8;
     // this.defenderSpeed = 10 * 30;
     // }
-    if (this.goal.y >= 640) {
+    if (this.goal.y >= 859) {
         this.goal.y = 0;
     }
     
@@ -289,7 +294,7 @@ gameScene.update = function() {
             activePuck = false;
             pucks[i].destroy();
             // puck bottom of screen reset
-        } else  if (puckRect.bottom >= 640) {
+        } else  if (puckRect.bottom >= 639) {
             activePuck = false;
             pucks[i].destroy();
         }
