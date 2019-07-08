@@ -14,7 +14,7 @@ scoreScene.create = function() {
 
     result = this.add.sprite(this.sys.game.config.width/2, 300, 'result');
 
-    this.input.once('pointerdown', function () {
+    this.input.on('pointerdown', function () {
 
         this.scene.stop();
         gameScene.scene.restart();
@@ -22,4 +22,6 @@ scoreScene.create = function() {
     }, this);
 
 }
-scoreScene.update = function() {}
+scoreScene.update = function() {
+    console.log("scorescene");
+}

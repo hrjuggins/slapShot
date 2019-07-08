@@ -207,7 +207,7 @@ function defence() {
 function loss() {
     score = 0;
     activePuck = false;
-    // gameScene.scene.pause()
+    gameScene.scene.stop()
     gameScene.scene.launch(scoreScene);
     // gameScene.scene.add('scoreScene', scoreScene, true, { x: 400, y: 300 });
 
